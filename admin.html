@@ -1,0 +1,573 @@
+
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>Painel Renovah RH</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Poppins;
+}
+
+/* FUNDO */
+
+body{
+
+background:linear-gradient(135deg,#0f2f5e,#2f6adf);
+
+min-height:100vh;
+
+display:flex;
+
+}
+
+/* SIDEBAR */
+
+.sidebar{
+
+width:240px;
+
+background:rgba(255,255,255,0.08);
+
+backdrop-filter:blur(12px);
+
+padding:35px 25px;
+
+color:white;
+
+box-shadow:5px 0 30px rgba(0,0,0,0.25);
+
+display:flex;
+flex-direction:column;
+
+}
+
+.sidebar h2{
+
+margin-bottom:35px;
+
+}
+
+.sidebar a{
+
+color:white;
+
+text-decoration:none;
+
+padding:12px 15px;
+
+border-radius:10px;
+
+margin-bottom:10px;
+
+transition:.3s;
+
+cursor:pointer;
+
+}
+
+.sidebar a:hover{
+
+background:rgba(255,255,255,0.15);
+
+transform:translateX(6px);
+
+}
+
+/* MAIN */
+
+.main{
+
+flex:1;
+
+padding:40px;
+
+}
+
+.main h1{
+
+color:white;
+
+margin-bottom:25px;
+
+}
+
+/* CARDS */
+
+.cards{
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+
+gap:25px;
+
+margin-bottom:35px;
+
+}
+
+.card{
+
+background:white;
+
+padding:25px;
+
+border-radius:18px;
+
+box-shadow:0 20px 50px rgba(0,0,0,0.35);
+
+transition:.4s;
+
+}
+
+.card:hover{
+
+transform:translateY(-6px) scale(1.02);
+
+}
+
+.card p{
+
+font-size:28px;
+
+font-weight:600;
+
+color:#2f6adf;
+
+margin-top:8px;
+
+}
+
+/* GRAFICOS */
+
+.graficos{
+
+display:grid;
+
+grid-template-columns:1fr 1fr;
+
+gap:25px;
+
+margin-bottom:35px;
+
+}
+
+.grafico-card{
+
+background:white;
+
+padding:25px;
+
+border-radius:18px;
+
+box-shadow:0 20px 50px rgba(0,0,0,0.25);
+
+height:300px;
+
+}
+
+.grafico-card canvas{
+
+height:220px !important;
+
+}
+
+/* FORM */
+
+.form{
+
+background:white;
+
+padding:30px;
+
+border-radius:18px;
+
+box-shadow:0 25px 70px rgba(0,0,0,0.35);
+
+}
+
+.form input,
+.form textarea{
+
+width:100%;
+
+padding:14px;
+
+border-radius:8px;
+
+border:1px solid #ddd;
+
+margin-bottom:15px;
+
+font-size:14px;
+
+}
+
+.form button{
+
+background:linear-gradient(90deg,#1d3f72,#2f6adf);
+
+color:white;
+
+border:none;
+
+padding:14px 25px;
+
+border-radius:10px;
+
+cursor:pointer;
+
+}
+
+/* VAGAS */
+
+.vaga{
+
+background:white;
+
+padding:20px;
+
+border-radius:15px;
+
+margin-bottom:20px;
+
+box-shadow:0 10px 30px rgba(0,0,0,0.25);
+
+}
+
+.vaga h3{
+
+color:#1d3f72;
+
+margin-bottom:10px;
+
+}
+
+/* PAGINAS */
+
+.pagina{
+
+display:none;
+
+}
+
+.pagina.ativa{
+
+display:block;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="sidebar">
+
+<h2>Renovah Admin</h2>
+
+<a onclick="mostrarPagina('dashboard')">Dashboard</a>
+
+<a onclick="mostrarPagina('cadastrar')">Cadastrar vaga</a>
+
+<a onclick="mostrarPagina('vagas')">Vagas</a>
+
+<a onclick="logout()">Sair</a>
+
+</div>
+
+<div class="main">
+
+<!-- DASHBOARD -->
+
+<div id="dashboard" class="pagina ativa">
+
+<h1>Painel Administrativo</h1>
+
+<div class="cards">
+
+<div class="card">
+<h3>Vagas ativas</h3>
+<p id="kpiVagas">0</p>
+</div>
+
+<div class="card">
+<h3>Candidatos</h3>
+<p id="kpiCandidatos">0</p>
+</div>
+
+<div class="card">
+<h3>Tempo médio</h3>
+<p id="kpiTempo">0 dias</p>
+</div>
+
+<div class="card">
+<h3>Taxa candidatura</h3>
+<p id="kpiTaxa">0%</p>
+</div>
+
+</div>
+
+<div class="graficos">
+
+<div class="grafico-card">
+
+<h3>Funil de Recrutamento</h3>
+
+<canvas id="graficoFunil"></canvas>
+
+</div>
+
+<div class="grafico-card">
+
+<h3>Status das vagas</h3>
+
+<canvas id="graficoStatus"></canvas>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- CADASTRAR -->
+
+<div id="cadastrar" class="pagina">
+
+<div class="form">
+
+<h2>Cadastrar nova vaga</h2>
+
+<input id="titulo" placeholder="Título da vaga">
+
+<input id="salario" placeholder="Salário">
+
+<input id="horario" placeholder="Horário">
+
+<input id="beneficios" placeholder="Benefícios">
+
+<textarea id="requisitos" placeholder="Requisitos"></textarea>
+
+<textarea id="descricao" placeholder="Descrição das atividades"></textarea>
+
+<button type="button" onclick="cadastrarVaga()">Publicar vaga</button>
+
+</div>
+
+</div>
+
+<!-- VAGAS -->
+
+<div id="vagas" class="pagina">
+
+<h1 style="color:white">Vagas publicadas</h1>
+
+<div id="lista"></div>
+
+</div>
+
+</div>
+
+<script>
+
+/* NAVEGAÇÃO */
+
+function mostrarPagina(pagina){
+
+document.querySelectorAll(".pagina").forEach(p=>{
+
+p.classList.remove("ativa")
+
+})
+
+document.getElementById(pagina).classList.add("ativa")
+
+}
+
+/* CADASTRAR VAGA */
+
+function cadastrarVaga(){
+
+let titulo = document.getElementById("titulo").value
+let salario = document.getElementById("salario").value
+let horario = document.getElementById("horario").value
+let beneficios = document.getElementById("beneficios").value
+let requisitos = document.getElementById("requisitos").value
+let descricao = document.getElementById("descricao").value
+
+if(titulo === ""){
+alert("Digite o título da vaga")
+return
+}
+
+let vagas = JSON.parse(localStorage.getItem("vagas")) || []
+
+let novaVaga = {
+titulo,
+salario,
+horario,
+beneficios,
+requisitos,
+descricao
+}
+
+vagas.push(novaVaga)
+
+localStorage.setItem("vagas", JSON.stringify(vagas))
+
+alert("Vaga publicada com sucesso!")
+
+mostrarVagas()
+
+carregarDashboard()
+
+mostrarPagina("vagas")
+
+}
+
+/* MOSTRAR VAGAS */
+
+function mostrarVagas(){
+
+const lista=document.getElementById("lista")
+
+let vagas=JSON.parse(localStorage.getItem("vagas"))||[]
+
+lista.innerHTML=""
+
+vagas.forEach(v=>{
+
+lista.innerHTML+=`
+
+<div class="vaga">
+
+<h3>${v.titulo}</h3>
+
+<p><strong>Salário:</strong> ${v.salario}</p>
+
+<p><strong>Horário:</strong> ${v.horario}</p>
+
+<p><strong>Benefícios:</strong> ${v.beneficios}</p>
+
+<p><strong>Requisitos:</strong> ${v.requisitos}</p>
+
+<p><strong>Descrição:</strong> ${v.descricao}</p>
+
+<p><strong>Enviar currículo:</strong> ${v.contato}</p>
+
+</div>
+
+`
+
+})
+
+}
+
+/* DASHBOARD */
+
+function carregarDashboard(){
+
+let vagas=JSON.parse(localStorage.getItem("vagas"))||[]
+
+kpiVagas.innerText=vagas.length
+
+let candidatos=Math.floor(Math.random()*50)
+
+kpiCandidatos.innerText=candidatos
+
+kpiTempo.innerText="12 dias"
+
+kpiTaxa.innerText=(vagas.length?Math.round(candidatos/vagas.length*10):0)+"%"
+
+
+new Chart(
+
+document.getElementById("graficoFunil"),
+
+{
+
+type:"bar",
+
+data:{
+
+labels:["Inscritos","Triagem","Entrevista","Teste","Contratado"],
+
+datasets:[{
+
+data:[120,80,40,18,5],
+
+backgroundColor:["#2f6adf","#3c7df0","#4a8df4","#5a9af7","#6aa6fa"],
+
+borderRadius:10
+
+}]
+
+},
+
+options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true}}}
+
+})
+
+
+new Chart(
+
+document.getElementById("graficoStatus"),
+
+{
+
+type:"doughnut",
+
+data:{
+
+labels:["Em aberto","Encerradas"],
+
+datasets:[{
+
+data:[vagas.length,2],
+
+backgroundColor:["#2f6adf","#1d3f72"],
+
+borderWidth:0
+
+}]
+
+},
+
+options:{cutout:"70%",plugins:{legend:{position:"bottom"}}}
+
+})
+
+}
+
+mostrarVagas()
+
+carregarDashboard()
+
+function logout(){
+
+localStorage.removeItem("adminLogado")
+
+window.location.href="login.html"
+
+}
+
+</script>
+
+</body>
+
+</html>
+
